@@ -20,6 +20,7 @@ RUN apt-get update && \
 	libftgl-dev  \
         libgit2-dev \
 	libssh2-1-dev \
+	file \
 	&& apt-get autoremove -y && apt-get autoclean -y \
 	&& apt-get clean && rm -rf /var/lib/apt/lists/* 
 
@@ -32,6 +33,8 @@ RUN Rscript -e "options(repos = c('https://cloud.r-project.org/')); \
 #    install.packages('shiny');  \
 #    install.packages(c('colorspace', 'assertthat', 'utf8', 'RColorBrewer', 'dichromat', 'munsell', 'labeling', 'viridisLite', 'cli', 'crayon', 'pillar', 'rlang', 'gtable', 'plyr', 'reshape2', 'scales', 'tibble', 'SparseM', 'dotCall64', 'lazyeval', 'ggplot2', 'miniUI', 'codetools', 'curl', 'openssl', 'backports', 'coda', 'MASS', 'mcmc', 'quantreg', 'lattice', 'spam', 'maps', 'htmlwidgets', 'crosstalk', 'manipulateWidget', 'polynom', 'httr', 'memoise', 'whisker', 'rstudioapi', 'git2r', 'withr', 'evaluate', 'highr', 'yaml', 'base64enc', 'rprojroot', 'MCMCpack', 'gtools', 'akima', 'ltsa', 'sp', 'Matrix', 'mvtnorm', 'numDeriv', 'fields', 'rgl', 'pixmap', 'splancs', 'orthopolynom', 'devtools', 'knitr', 'markdown', 'rmarkdown', 'rgdal', 'Deriv', 'HKprocess', 'FGN', 'MatrixModels'))" 
 
+RUN Rscript -e "options(repos = c('https://cloud.r-project.org/'));install.packages(c('shiny'))"
+
 RUN Rscript -e "options(repos = c('https://cloud.r-project.org/'));install.packages(c('rnaturalearthdata','TMB','devtools','rgl'))" 
 
 RUN Rscript -e "options(repos = c('https://cloud.r-project.org/'));install.packages('BiocManager')  ;   BiocManager::install('Rgraphviz', update=FALSE, ask=FALSE)"
@@ -42,14 +45,20 @@ RUN Rscript -e "options(repos = c('https://cloud.r-project.org/'));install.packa
 # Define the version/repo of INLA to use. Choose either: 'stable' or 'testing'
 ARG INLA_REPO='stable'
 
-RUN Rscript -e "install.packages('INLA', repos=c(getOption('repos'), INLA='https://inla.r-inla-download.org/R/$INLA_REPO') ,   dep=TRUE)" 
+RUN R -e "install.packages('INLA', repos=c(getOption('repos'), INLA='https://inla.r-inla-download.org/R/$INLA_REPO') ,   dep=TRUE)" 
 
 # Install FishStatsUtils from github
-RUN Rscript -e "remotes::install_github('james-thorson/FishStatsUtils', INSTALL_opts='--no-staged-install')" 
+RUN R -e "remotes::install_github('james-thorson/FishStatsUtils', INSTALL_opts='--no-staged-install')" 
 
 # Install VAST from github
-RUN Rscript -e "remotes::install_github('james-thorson/VAST', INSTALL_opts='--no-staged-install')" 
+RUN R -e "remotes::install_github('james-thorson/VAST', INSTALL_opts='--no-staged-install')" 
 
+ENV USER vast
+ENV PASSWORD vastuser
+
+RUN adduser $USER --disabled-password --home /home/$USER --gecos ""  && gpasswd -a $USER sudo
+
+USER $USER
 
 LABEL maintainer="Yukio Takeuchi"
 
