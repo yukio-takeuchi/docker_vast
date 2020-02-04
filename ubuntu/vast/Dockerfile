@@ -35,6 +35,11 @@ RUN apt-get update && apt-get  -y --no-install-recommends install gpg   ca-certi
 	&& apt-get autoclean -y \
 	&& apt-get  clean -y && rm -rf /var/lib/apt/lists/*
 
+## Avoid error related to rgl package on headless see https://github.com/r-lib/remotes/issues/332
+ENV RGL_USE_NULL  "TRUE"
+
+# Sys.setenv(R_INSTALL_STAGED = FALSE)
+ENV R_INSTALL_STAGED  FALSE
 
 RUN R -e "options(repos = c('https://cloud.r-project.org/')); \
     update.packages(ask=FALSE)"

@@ -6,30 +6,36 @@ ENV DEBIAN_FRONTEND=noninteractive
 ## This command is taken from https://raw.githubusercontent.com/egonzalf/rstudio-inla/master/Dockerfile 
 ## Then modified to add additional packages for instlation of rgl
 RUN apt-get update && \
-    apt-get -y install --no-install-recommends \
-        build-essential \
+    apt-get -y install --no-install-recommends --allow-downgrades \
+#        build-essential \
 #        gcc g++ gfortran \
-        libfreetype6-dev \
+        libfreetype-dev \
         libgdal-dev \
         libglu1-mesa-dev \
 	libgl1-mesa-dev \
-	libglx-dev \
+	libglvnd-dev \
 	libx11-dev \
+	libxcb1=1.13.1-2 \
 	libxcb1-dev \
-	libxcb1 \
-        libssl-dev \
+	libssl-dev \
+	libgl-dev \
+	libglx-dev \
         mesa-common-dev \
+	xserver-xorg-core \
  	xserver-xorg-video-dummy \
 	libudunits2-dev \
 	libftgl-dev  \
 	libgl1-mesa-dev \
-	libgl-dev \
         libgit2-dev \
 	libssh2-1-dev \
 	file \
 	&& apt-get autoremove -y && apt-get autoclean -y \
 	&& apt-get clean && rm -rf /var/lib/apt/lists/* 
 
+
+#  libgl1-mesa-dev : Depends: libglvnd-dev but it is not going to be installed
+#  libglx-dev : Depends: libx11-dev but it is not going to be installed
+#   mesa-common-dev : Depends: libx11-dev but it is not going to be installed
 
 # libftgl-dev : Depends: libgl1-mesa-dev but it is not going to be installed or
 #                        libgl-dev but it is not going to be installed
@@ -40,15 +46,12 @@ RUN apt-get update && \
 #                   Depends: libx11-dev but it is not going to be installed
 # bx11-dev : Depends: libxcb1-dev but it is not going to be installed
 
-RUN Rscript -e "options(repos = c('https://cloud.r-project.org/')); \
+## Avoid error related to rgl package on headless see https://github.com/r-lib/remotes/issues/332 
+ENV RGL_USE_NULL  "TRUE"
+
+RUN R -e "options(repos = c('https://cloud.r-project.org/')); \
     update.packages(ask=FALSE)"
 
-#RUN Rscript -e "options(repos = c('https://cloud.r-project.org/')); \
-#    update.packages(ask=FALSE); \
-#    install.packages('shiny');  \
-#    install.packages(c('colorspace', 'assertthat', 'utf8', 'RColorBrewer', 'dichromat', 'munsell', 'labeling', 'viridisLite', 'cli', 'crayon', 'pillar', 'rlang', 'gtable', 'plyr', 'reshape2', 'scales', 'tibble', 'SparseM', 'dotCall64', 'lazyeval', 'ggplot2', 'miniUI', 'codetools', 'curl', 'openssl', 'backports', 'coda', 'MASS', 'mcmc', 'quantreg', 'lattice', 'spam', 'maps', 'htmlwidgets', 'crosstalk', 'manipulateWidget', 'polynom', 'httr', 'memoise', 'whisker', 'rstudioapi', 'git2r', 'withr', 'evaluate', 'highr', 'yaml', 'base64enc', 'rprojroot', 'MCMCpack', 'gtools', 'akima', 'ltsa', 'sp', 'Matrix', 'mvtnorm', 'numDeriv', 'fields', 'rgl', 'pixmap', 'splancs', 'orthopolynom', 'devtools', 'knitr', 'markdown', 'rmarkdown', 'rgdal', 'Deriv', 'HKprocess', 'FGN', 'MatrixModels'))" 
-
-# Sys.setenv(R_INSTALL_STAGED = FALSE)
 ENV R_INSTALL_STAGED  FALSE
 
 RUN R -e "options(repos = c('https://cloud.r-project.org/'));install.packages(c('shiny'))"

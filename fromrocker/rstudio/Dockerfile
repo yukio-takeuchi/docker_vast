@@ -5,8 +5,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 ## This command is taken from https://raw.githubusercontent.com/egonzalf/rstudio-inla/master/Dockerfile 
 ## Then modified to add additional packages for instlation of rgl
+## libfreetype6-dev is replaced with libfreetype-dev, as libfreetype6-dev is claimed as "transitional" on Debian
 RUN apt-get update && \
-    apt-get -y install --no-install-recommends \
+   apt-get -y install --no-install-recommends \
         build-essential \
 #        gcc g++ gfortran \
         libfreetype6-dev \
@@ -24,6 +25,9 @@ RUN apt-get update && \
 	&& apt-get autoremove -y && apt-get autoclean -y \
 	&& apt-get clean && rm -rf /var/lib/apt/lists/* 
 
+
+## Avoid error related to rgl package on headless see https://github.com/r-lib/remotes/issues/332
+ENV RGL_USE_NULL  "TRUE"
 
 RUN R -e "options(repos = c('https://cloud.r-project.org/')); \
     update.packages(ask=FALSE)"
