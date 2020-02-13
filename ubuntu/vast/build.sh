@@ -1,7 +1,9 @@
 #!/bin/bash
 
-if [ $# != 1 ]; then
-  echo "number of arguments differ from 1!"
+if [ $# -lt  1 ]; then
+  echo "arguments are missing "
+  echo "At least name of log-file is needed"
+  echo "In addition addition one option for docker build command in second argument"
   exit 1
 fi
 
@@ -9,7 +11,7 @@ LOGFILE=$1
 
 NM=yosemite0808/ubuntu_vast
 
-docker build . --tag $NM:latest | tee ${LOGFILE}.log
+docker build . --tag $NM:latest $2 | tee ${LOGFILE}.log
 # docker build . --tag yosemite0808/ubuntu_vast:$(date -d now +%Y%m%d)
 docker tag $NM:latest $NM:$(date -d now +%Y%m%d) | tee -a ${LOGFILE}.log
 if [ -f ${LOGFILE}.log  ]; then
