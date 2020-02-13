@@ -12,12 +12,10 @@ LOGFILE=$1
 NM=yosemite0808/r-base_fromofficial_vast
 
 docker build . --tag $NM:latest $2 | tee ${LOGFILE}.log
-# docker build . --tag yosemite0808/ubuntu_vast:$(date -d now +%Y%m%d)
 docker tag $NM:latest $NM:$(date -d now +%Y%m%d) | tee -a ${LOGFILE}.log
 if [ -f ${LOGFILE}.log  ]; then
   cp -p ${LOGFILE}.log  ~/Dropbox/vast/log/${LOGFILE}_$(date -d now +%Y%m%d%H%M).log
 fi 
 
-# date -d now +%Y%m%d%H%M
 
 
