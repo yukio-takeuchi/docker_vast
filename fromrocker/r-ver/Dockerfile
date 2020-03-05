@@ -2,7 +2,9 @@
 # Base image is based on r-ver instead of r-base 
 #
 # 2020-02-18 set tag to 3.6.2
-FROM rocker/r-ver:3.6.2
+# FROM rocker/r-ver:3.6.2
+# 2020-03-02 set tag to latest (tags other than latest is missing 2020-03-02)
+FROM rocker/r-ver:latest
 
 ## In order to avoid interupt for timezone setting
 ENV DEBIAN_FRONTEND noninteractive 

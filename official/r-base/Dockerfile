@@ -15,7 +15,8 @@ RUN apt-get update && \
 	libgl1-mesa-dev \
 	libglvnd-dev \
 	libx11-dev \
-	libxcb1=1.13.1-2 \
+	#libxcb1=1.13.1-2 \
+	libxcb1 \
 	libxcb1-dev \
 	libssl-dev \
 	libgl-dev \
