@@ -77,7 +77,8 @@ RUN adduser $USER --disabled-password --home /home/$USER --gecos ""  && gpasswd 
 
 USER $USER
 
-CMD R
+#CMD R
+CMD cd /home/$USER  &&  R
 
 LABEL maintainer="Yukio Takeuchi"
 
