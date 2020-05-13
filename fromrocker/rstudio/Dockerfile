@@ -47,16 +47,18 @@ ARG INLA_REPO='stable'
 RUN R -e "install.packages('INLA', repos=c(getOption('repos'), INLA='https://inla.r-inla-download.org/R/$INLA_REPO') ,  dep=TRUE)" 
 
 # Install FishStatsUtils from github
-#RUN Rscript -e "remotes::install_github('james-thorson/FishStatsUtils', INSTALL_opts='--no-staged-install')" 
+RUN Rscript -e "remotes::install_github('james-thorson/FishStatsUtils', INSTALL_opts='--no-staged-install')" 
 
 # Install VAST from github
-#RUN Rscript -e "remotes::install_github('james-thorson/VAST', INSTALL_opts='--no-staged-install')" 
+RUN Rscript -e "remotes::install_github('james-thorson/VAST', INSTALL_opts='--no-staged-install')" 
 
-#ENV USER vast
-#ENV PASSWORD vastuser
+ENV USER vast
+ENV PASSWORD vastuser
 
-#RUN adduser $USER --disabled-password --home /home/$USER --gecos ""  && gpasswd -a $USER sudo
+RUN adduser $USER --disabled-password --home /home/$USER --gecos ""  && gpasswd -a $USER sudo
 
-#USER $USER
+USER $USER
+
+CMD cd /home/$USER  &&  R
 
 LABEL maintainer="Yukio Takeuchi"
