@@ -4,10 +4,16 @@
 # 2020-02-18 set tag to 3.6.2
 # FROM rocker/r-ver:3.6.2
 # 2020-03-02 set tag to latest (tags other than latest is missing 2020-03-02)
-FROM rocker/r-ver:latest
+# 2020-05-13 update R version to 4.0.0 and set rocker/r-ver:4.0.0 to be used 
+# 2020-05-27 Revised to use rocker/r-ver:4.0.0 as the base image
+# 2020-08-10 Changed the base image to rocker/r-ver:4.0.2
+FROM rocker/r-ver:4.0.2
 
 ## In order to avoid interupt for timezone setting
 ENV DEBIAN_FRONTEND noninteractive 
+
+ARG GITHUBUSERNAME=github_username 
+ARG GITHUBPASSWORD=$github_password
 
 ## This command is taken from https://raw.githubusercontent.com/egonzalf/rstudio-inla/master/Dockerfile 
 ## Then modified to add additional packages for instlation of rgl
@@ -34,6 +40,7 @@ RUN apt-get update && \
 	pkg-config \
 	libudunits2-dev \
 	libgdal-dev \
+  libglu1-mesa-dev \
         && apt-get autoremove -y && apt-get autoclean -y \
         && apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -69,6 +76,9 @@ ENV R_INSTALL_STAGED  FALSE
 
 RUN R -e "options(repos = c('https://cloud.r-project.org/'));install.packages(c('shiny'))"
 
+######
+
+
 RUN R -e "options(repos = c('https://cloud.r-project.org/'));install.packages(c('rnaturalearthdata','TMB','devtools','rgl','rgdal'))" 
 
 RUN R -e "options(repos = c('https://cloud.r-project.org/'));install.packages('BiocManager')  ;   BiocManager::install('Rgraphviz', update=FALSE, ask=FALSE)"
@@ -82,15 +92,29 @@ ARG INLA_REPO='stable'
 RUN R -e "install.packages('INLA', repos=c(getOption('repos'), INLA='https://inla.r-inla-download.org/R/$INLA_REPO') ,   dep=TRUE)" 
 
 # Install FishStatsUtils from github
-RUN R -e "remotes::install_github('james-thorson/FishStatsUtils', INSTALL_opts='--no-staged-install')" 
+RUN R -e "remotes::install_github('james-thorson/FishStatsUtils', INSTALL_opts='--no-staged-install', auth_token = $GITHUBPASSWORD)" 
 
 # Install VAST from github
-RUN R -e "remotes::install_github('james-thorson/VAST', INSTALL_opts='--no-staged-install')" 
+RUN R -e "remotes::install_github('james-thorson/VAST', INSTALL_opts='--no-staged-install' , auth_token = $GITHUBPASSWORD)" 
+
+## 2020-08-12 Add ThorsonUtilities as it is required from VASR 
+## It seems it is implicitely installed 
+#RUN R -e "remotes::install_github('james-thorson/Utilities', INSTALL_opts='--no-staged-install' , auth_token = $GITHUBPASSWORD)"
+
+## 2020-06-21 install missing sudo command
+
+RUN apt-get update && \
+    apt-get -y install --no-install-recommends \
+        sudo
+
+RUN apt-get update && \
+    apt-get -y upgrade --no-install-recommends &&  \
+    apt-get -y autoremove
 
 ENV USER vast
 ENV PASSWORD vastuser
 
-RUN adduser $USER --disabled-password --home /home/$USER --gecos ""  && gpasswd -a $USER sudo
+RUN adduser $USER --disabled-password --home /home/$USER --gecos ""  && echo "$USER:$USER" | chpasswd && gpasswd -a $USER sudo
 
 USER $USER
 
