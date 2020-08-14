@@ -16,9 +16,17 @@ NM=yosemite0808/r-ver_vast
 docker build .   --build-arg github_password=$PERSONAL_ACCESS_TOKEN \
  --tag $NM:latest $2  | tee ${LOGFILE}.log
 # docker build . --tag yosemite0808/ubuntu_vast:$(date -d now +%Y%m%d)
-docker tag $NM:latest $NM:$(date -d now +%Y%m%d) | tee -a ${LOGFILE}.log
+if [ $(uname)='Darwin' ]; then 
+  DATE="$(date  +%Y%m%d)"
+  DATETIME="$(date  +%Y%m%d%H%M)"
+else
+  DATE="$(date -d now +%Y%m%d)" 
+  DATETIME="$(date -d now +%Y%m%d%H%M)"
+fi
+echo "DATETIME is $DATETIME"
+docker tag $NM:latest $NM:$DATE | tee -a ${LOGFILE}.log
 if [ -f ${LOGFILE}.log  ]; then
-  cp -p ${LOGFILE}.log  ~/Dropbox/vast/log/${LOGFILE}_$(date -d now +%Y%m%d%H%M).log
+  cp -p ${LOGFILE}.log  ~/Dropbox/vast/log/${LOGFILE}_$DATETIME.log
 fi 
 
 # date -d now +%Y%m%d%H%M

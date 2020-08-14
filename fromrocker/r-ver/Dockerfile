@@ -7,6 +7,7 @@
 # 2020-05-13 update R version to 4.0.0 and set rocker/r-ver:4.0.0 to be used 
 # 2020-05-27 Revised to use rocker/r-ver:4.0.0 as the base image
 # 2020-08-10 Changed the base image to rocker/r-ver:4.0.2
+# 2020-08-14 adapt date command for MacOS
 FROM rocker/r-ver:4.0.2
 
 ## In order to avoid interupt for timezone setting
