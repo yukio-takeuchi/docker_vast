@@ -101,6 +101,21 @@ RUN R -e "remotes::install_github('james-thorson/VAST', INSTALL_opts='--no-stage
 ## It seems it is implicitely installed 
 #RUN R -e "remotes::install_github('james-thorson/Utilities', INSTALL_opts='--no-staged-install' , auth_token = $GITHUBPASSWORD)"
 
+## 2020-08-12
+# Change environment to Japanese(Character and DateTime)
+ENV LANG ja_JP.UTF-8
+ENV LC_ALL ja_JP.UTF-8
+RUN sed -i '$d' /etc/locale.gen \
+  && echo "ja_JP.UTF-8 UTF-8" >> /etc/locale.gen \
+    && locale-gen ja_JP.UTF-8 \
+    && /usr/sbin/update-locale LANG=ja_JP.UTF-8 LANGUAGE="ja_JP:ja"
+RUN /bin/bash -c "source /etc/default/locale"
+RUN ln -sf  /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
+
+# Install ipaexfont
+RUN apt-get update && apt-get install -y \
+  fonts-ipaexfont
+
 ## 2020-06-21 install missing sudo command
 
 RUN apt-get update && \

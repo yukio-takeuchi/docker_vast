@@ -1,4 +1,4 @@
-FROM ubuntu
+FROM ubuntu:20.04
 
 ## In order to avoid interupt for timezone setting
 ENV DEBIAN_FRONTEND=noninteractive 
@@ -28,7 +28,7 @@ RUN apt-get update && \
 # Add CRAN R repo to /etc/apt/sources.list
 RUN apt-get update && apt-get  -y --no-install-recommends install gpg   ca-certificates dirmngr gpg-agent \
 	&& apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
-	&& echo "deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/" | tee -a /etc/apt/sources.list \	
+	&& echo "deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/" | tee -a /etc/apt/sources.list \	
 	&& apt-get update  \
 	&& apt-get  -y --no-install-recommends install r-base-dev  \
 	&& apt-get autoremove -y  \
@@ -69,6 +69,38 @@ RUN R -e "remotes::install_github('james-thorson/FishStatsUtils', INSTALL_opts='
 
 # Install VAST from github
 RUN R -e "remotes::install_github('james-thorson/VAST', INSTALL_opts='--no-staged-install')" 
+
+## 2020-08-12 taken from p16 of https://mzdgnk.gitlab.io/r-ml/Docker/rstudio.html#16
+# Change environment to Japanese(Character and DateTime)
+ENV LANG ja_JP.UTF-8
+ENV LC_ALL ja_JP.UTF-8
+### Needed to avoid error missing locale.gen https://qiita.com/kikako/items/5961628476abf61ee371
+RUN apt-get update && \
+	apt-get -y install  --no-install-recommends \
+		language-pack-ja-base language-pack-ja 
+RUN sed -i '$d' /etc/locale.gen \
+  && echo "ja_JP.UTF-8 UTF-8" >> /etc/locale.gen \
+    && locale-gen ja_JP.UTF-8 \
+    && /usr/sbin/update-locale LANG=ja_JP.UTF-8 LANGUAGE="ja_JP:ja"
+RUN /bin/bash -c "source /etc/default/locale"
+RUN ln -sf  /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
+
+# Install ipaexfont
+RUN apt-get update && apt-get install -y \
+  		 --no-install-recommends \
+			fonts-ipaexfont
+
+
+
+## 2020-08-12 install missing sudo command
+
+RUN apt-get update && \
+    apt-get -y install --no-install-recommends \
+        sudo
+
+RUN apt-get update && \
+    apt-get -y upgrade --no-install-recommends &&  \
+    apt-get -y autoremove
 
 ENV USER vast
 ENV PASSWORD vastuser
