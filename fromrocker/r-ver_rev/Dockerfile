@@ -87,11 +87,11 @@ ENV R_INSTALL_STAGED  FALSE
 
 # RUN R -e "options(repos = c('https://cloud.r-project.org/'));install.packages(c('shiny'))"
 
-RUN install2.r 'Rcpp' --error --ncpus -1 --skipinstalled -- --no-staged-install
+RUN install2.r  --error --ncpus -1 --skipinstalled -- --no-staged-install 'Rcpp'
 
-RUN install2.r 'shiny' --error --ncpus -1 --skipinstalled -- --no-staged-install
+RUN install2.r  --error --ncpus -1 --skipinstalled -- --no-staged-install 'shiny'
 
-RUN install2.r  'rgl' --error --ncpus -1 --skipinstalled -- --no-staged-install
+RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install 'rgl'
 
 
 ######
@@ -99,44 +99,44 @@ RUN install2.r  'rgl' --error --ncpus -1 --skipinstalled -- --no-staged-install
 
 #RUN R -e "options(repos = c('https://cloud.r-project.org/'));install.packages(c('rnaturalearthdata','TMB','devtools','rgl','rgdal'))" 
 
-RUN install2.r 'rnaturalearthdata'  --error --ncpus -1 --skipinstalled -- --no-staged-install
+RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install 'rnaturalearthdata'
 
-RUN install2.r 'RcppEigen'  --error --ncpus -1 --skipinstalled -- --no-staged-install
+RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install 'RcppEigen'
 
-RUN install2.r 'TMB' --error --ncpus -1 --skipinstalled -- --no-staged-install
+RUN install2.r  --error --ncpus -1 --skipinstalled -- --no-staged-install 'TMB'
 
-RUN install2.r 'roxygen2'  --error --ncpus -1 --skipinstalled -- --no-staged-install
+RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install 'roxygen2'
 
-RUN install2.r  'devtools' --error --ncpus -1 --skipinstalled -- --no-staged-install
+RUN install2.r  --error --ncpus -1 --skipinstalled -- --no-staged-install 'devtools' 
 
 
-RUN install2.r  'rgdal' --error --ncpus -1 --skipinstalled -- --no-staged-install
+RUN install2.r  --error --ncpus -1 --skipinstalled -- --no-staged-install 'rgdal' 
 
 #RUN R -e "options(repos = c('https://cloud.r-project.org/'));install.packages('BiocManager')  ;   BiocManager::install('Rgraphviz', update=FALSE, ask=FALSE)"
 
-RUN install2.r  'BiocManager' --error --ncpus -1 --skipinstalled -- --no-staged-install
+RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install 'BiocManager'
 
 RUN R -e "BiocManager::install('Rgraphviz', update=FALSE, ask=FALSE)"
 
-RUN install2.r  'sf' --error --ncpus -1 --skipinstalled -- --no-staged-install
+RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install 'sf'
 
-RUN install2.r  'RcppArmadillo' --error --ncpus -1 --skipinstalled  -- --no-staged-install
+RUN install2.r   --error --ncpus -1 --skipinstalled  -- --no-staged-install 'RcppArmadillo'
 
-RUN install2.r  'maps' --error --ncpus -1 --skipinstalled  -- --no-staged-install
+RUN install2.r   --error --ncpus -1 --skipinstalled  -- --no-staged-install 'maps'
 
 RUN install2.r  'fields' --error --ncpus -1 --skipinstalled  -- --no-staged-install
 
-RUN install2.r  'spdep' --error --ncpus -1 --skipinstalled -- --no-staged-install
+RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install 'spdep'
 
-RUN install2.r  'dplyr' --error --ncpus -1 --skipinstalled  -- --no-staged-install
+RUN install2.r   --error --ncpus -1 --skipinstalled  -- --no-staged-install 'dplyr'
 
-RUN install2.r  'rgeos' --error --ncpus -1 --skipinstalled  -- --no-staged-install
+RUN install2.r   --error --ncpus -1 --skipinstalled  -- --no-staged-install 'rgeos'
 
-RUN install2.r  'tinytex' --error --ncpus -1 --skipinstalled -- --no-staged-install
+RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install 'tinytex'
 
-RUN install2.r  'rmarkdown' --error --ncpus -1 --skipinstalled  -- --no-staged-install
+RUN install2.r   --error --ncpus -1 --skipinstalled  -- --no-staged-install 'rmarkdown'
 
-RUN install2.r  'foreach' --error --ncpus -1 --skipinstalled  -- --no-staged-install
+RUN install2.r   --error --ncpus -1 --skipinstalled  -- --no-staged-install 'foreach'
 
 # RUN R -e "options(repos = c('https://cloud.r-project.org/')); install.packages('TMB')"
 
@@ -149,24 +149,26 @@ ARG INLA_REPO='stable'
 RUN echo "options(repos = c(CRAN = 'https://cran.rstudio.com/', INLA='https://inla.r-inla-download.org/R/$INLA_REPO'), \
   download.file.method = 'libcurl')" >> /usr/local/lib/R/etc/Rprofile.site
 
-RUN install2.r  'INLA' --error --ncpus -1 --skipinstalled -- --no-staged-install
+RUN install2.r  --error --ncpus -1 --skipinstalled -- --no-staged-install 'INLA' 
 
 # Install FishStatsUtils from github
 #RUN R -e "remotes::install_github('james-thorson/FishStatsUtils', INSTALL_opts='--no-staged-install', auth_token = $GITHUBPASSWORD)" 
 
-RUN install2.r  statmod   \
+RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install \
+                statmod   \
                 nloptr   \    
                 minqa    \    
-                lme4     \
-                 --error --ncpus -1 --skipinstalled -- --no-staged-install
+                lme4     
+                
 
-RUN install2.r  doParallel   \
+RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install \
+                doParallel   \
                 plyr         \
                 zoo          \
-                intervals    \
-                --error --ncpus -1 --skipinstalled -- --no-staged-install
+                intervals    
 
-RUN install2.r  xts \
+RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install \
+                xts \
                 FNN          \
                 spacetime    \
                 shapefiles   \
@@ -180,17 +182,17 @@ RUN install2.r  xts \
                 plotrix      \
                 scales       \
                 reshape      \
-                ps           \
-                --error --ncpus -1 --skipinstalled -- --no-staged-install
+                ps           
 
-RUN install2.r  glmmTMB      \
-                --error --ncpus -1 --skipinstalled -- --no-staged-install
+RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install glmmTMB      
+                
 
-RUN install2.r  qgam         \
-                sfsmisc      \
-                --error --ncpus -1 --skipinstalled -- --no-staged-install
+RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install \
+                qgam         \
+                sfsmisc      
 
-RUN install2.r    ape \
+RUN install2.r     --error --ncpus -1 --skipinstalled -- --no-staged-install \
+                  ape \
                   lmtest       \
                   gap   \       
                   RSAGA        \
@@ -204,10 +206,10 @@ RUN install2.r    ape \
                   RandomFieldsUtils \
                   DHARMa       \
                   splancs      \
-                  formatR      \
-                  --error --ncpus -1 --skipinstalled -- --no-staged-install
+                  formatR      
 
-RUN install2.r  rnaturalearth \
+RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install \
+                rnaturalearth \
                 pander       \
                 corpcor      \
                 abind        \
@@ -218,8 +220,8 @@ RUN install2.r  rnaturalearth \
                 RandomFields \
                 RANN         \
                 maptools     \
-                mapproj      \
-                --error --ncpus -1 --skipinstalled -- --no-staged-install
+                mapproj      
+                
 
 #RUN installGithub.r 'james-thorson/FishStatsUtils'
 
