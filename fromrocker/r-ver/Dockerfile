@@ -8,7 +8,8 @@
 # 2020-05-27 Revised to use rocker/r-ver:4.0.0 as the base image
 # 2020-08-10 Changed the base image to rocker/r-ver:4.0.2
 # 2020-08-14 adapt date command for MacOS
-FROM rocker/r-ver:4.0.2
+# 2020-09-09 4.0.0 is bask
+FROM rocker/r-ver:4.0.0
 
 ## In order to avoid interupt for timezone setting
 ENV DEBIAN_FRONTEND noninteractive 

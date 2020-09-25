@@ -8,6 +8,8 @@
 # 2020-05-27 Revised to use rocker/r-ver:4.0.0 as the base image
 # 2020-08-10 Changed the base image to rocker/r-ver:4.0.2
 # 2020-08-14 adapt date command for MacOS
+# 2020-08-23 Change the base image back yo rocker/r-ver:4.0.0
+# 2020-09-23 Chnage to 4.0.2 again
 FROM rocker/r-ver:4.0.2
 
 ## In order to avoid interupt for timezone setting
@@ -28,6 +30,7 @@ ARG GITHUBPASSWORD=$github_password
 ## R package rgdal requires libgdal-dev 
 ## R package units requires libudunits2-dev
 RUN apt-get update && \
+    apt-get -y upgrade --no-install-recommends &&  \
     apt-get -y install --no-install-recommends \
         build-essential \
 	libssl-dev \
@@ -61,9 +64,9 @@ RUN apt-get update && \
 #	&& apt-get autoremove -y && apt-get autoclean -y \
 #	&& apt-get clean && rm -rf /var/lib/apt/lists/* 
 
-RUN apt-get update && \
-    apt-get -y upgrade --no-install-recommends &&  \
-    apt-get -y autoremove
+#RUN apt-get update && \
+#    apt-get -y upgrade --no-install-recommends &&  \
+#    apt-get -y autoremove && 
 
 
 ## Avoid error related to rgl package on headless see https://github.com/r-lib/remotes/issues/332
@@ -223,18 +226,18 @@ RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install \
                 mapproj      
                 
 
-#RUN installGithub.r 'james-thorson/FishStatsUtils'
+RUN installGithub.r 'james-thorson/FishStatsUtils'
 
 # Install VAST from github
 #RUN R -e "remotes::install_github('james-thorson/VAST', INSTALL_opts='--no-staged-install' , auth_token = $GITHUBPASSWORD)" 
 
-#RUN installGithub.r 'james-thorson/VAST'
+RUN installGithub.r 'james-thorson/VAST'
 
 ## 2020-08-12 Add ThorsonUtilities as it is required from VAST
 ## It seems it is implicitely installed 
 #RUN R -e "remotes::install_github('james-thorson/Utilities', INSTALL_opts='--no-staged-install' , auth_token = $GITHUBPASSWORD)"
 
-#RUN installGithub.r 'james-thorson/Utilities'
+RUN installGithub.r 'james-thorson/Utilities'
 
 ## 2020-08-12
 # Change environment to Japanese(Character and DateTime)
