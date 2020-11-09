@@ -1,3 +1,4 @@
+# syntax = docker/dockerfile:1.0-experimental
 FROM ubuntu:20.04
 
 ## In order to avoid interupt for timezone setting
@@ -20,7 +21,12 @@ RUN apt-get update && \
 	libftgl-dev  \
 	libgit2-dev \
 	libssh2-1-dev \
+  libfontconfig1-dev \
+  wget \
+  locales \
 	file \
+	tcl-dev \
+	tk-dev	\
 	&& apt-get autoremove -y && apt-get autoclean -y \
 	&& apt-get clean && rm -rf /var/lib/apt/lists/* 
 
@@ -30,8 +36,18 @@ RUN apt-get update && apt-get  -y --no-install-recommends install gpg   ca-certi
 	&& apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
 	&& echo "deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/" | tee -a /etc/apt/sources.list \	
 	&& apt-get update  \
-	&& apt-get  -y --no-install-recommends install r-base-dev  \
-	&& apt-get autoremove -y  \
+	&& apt-get  -y --no-install-recommends install \
+	r-base  \
+ 	r-base-dev \
+  r-recommended \
+	littler \
+  && ln -s /usr/lib/R/site-library/littler/examples/install.r /usr/local/bin/install.r \
+ 	&& ln -s /usr/lib/R/site-library/littler/examples/install2.r /usr/local/bin/install2.r \
+ 	&& ln -s /usr/lib/R/site-library/littler/examples/installGithub.r /usr/local/bin/installGithub.r \
+ 	&& ln -s /usr/lib/R/site-library/littler/examples/testInstalled.r /usr/local/bin/testInstalled.r \
+ 	&& install.r docopt \
+ 	&& rm -rf /tmp/downloaded_packages/ /tmp/*.rds \
+  && apt-get autoremove -y  \
 	&& apt-get autoclean -y \
 	&& apt-get  clean -y && rm -rf /var/lib/apt/lists/*
 
@@ -49,26 +65,78 @@ RUN R -e "options(repos = c('https://cloud.r-project.org/')); \
 #    install.packages('shiny');  \
 #    install.packages(c('colorspace', 'assertthat', 'utf8', 'RColorBrewer', 'dichromat', 'munsell', 'labeling', 'viridisLite', 'cli', 'crayon', 'pillar', 'rlang', 'gtable', 'plyr', 'reshape2', 'scales', 'tibble', 'SparseM', 'dotCall64', 'lazyeval', 'ggplot2', 'miniUI', 'codetools', 'curl', 'openssl', 'backports', 'coda', 'MASS', 'mcmc', 'quantreg', 'lattice', 'spam', 'maps', 'htmlwidgets', 'crosstalk', 'manipulateWidget', 'polynom', 'httr', 'memoise', 'whisker', 'rstudioapi', 'git2r', 'withr', 'evaluate', 'highr', 'yaml', 'base64enc', 'rprojroot', 'MCMCpack', 'gtools', 'akima', 'ltsa', 'sp', 'Matrix', 'mvtnorm', 'numDeriv', 'fields', 'rgl', 'pixmap', 'splancs', 'orthopolynom', 'devtools', 'knitr', 'markdown', 'rmarkdown', 'rgdal', 'Deriv', 'HKprocess', 'FGN', 'MatrixModels'))" 
 
-RUN R -e "options(repos = c('https://cloud.r-project.org/'));install.packages(c('rnaturalearthdata','TMB'))" 
+# RUN R -e "options(repos = c('https://cloud.r-project.org/'));install.packages(c('rnaturalearthdata','TMB'))" 
 
-RUN R -e "options(repos = c('https://cloud.r-project.org/'));install.packages(c('shiny'))"
+RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install \
+    'rnaturalearthdata' \
+		'TMB' \
+    && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
-RUN R -e "options(repos = c('https://cloud.r-project.org/'));install.packages('BiocManager') ; \
-	BiocManager::install('Rgraphviz', update=FALSE, ask=FALSE)"
+# RUN R -e "options(repos = c('https://cloud.r-project.org/'));install.packages(c('shiny','littler','systemfonts'))"
+
+RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install \
+    'shiny' \
+    'systemfonts' \
+    'devtools' \
+		'remotes' \
+    && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
+
+
+#RUN R -e "options(repos = c('https://cloud.r-project.org/'));install.packages('BiocManager') ; \
+#	BiocManager::install('Rgraphviz', update=FALSE, ask=FALSE)"
+
+RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install \
+    'BiocManager' \
+		&& R -e "BiocManager::install('Rgraphviz', update=FALSE, ask=FALSE)" \
+		&& rm -rf /tmp/downloaded_packages/ /tmp/*.rd	
 
 # RUN Rscript -e "options(repos = c('https://cloud.r-project.org/')); install.packages('TMB')"
 
 ## Install INLA 
 # Define the version/repo of INLA to use. Choose either: 'stable' or 'testing'
-ARG INLA_REPO='stable'
+ARG INLA_REPO='testing'
 
-RUN R -e "install.packages('INLA', repos=c(getOption('repos'), INLA='https://inla.r-inla-download.org/R/$INLA_REPO'), dep=TRUE)" 
+# RUN Rscript -e '.libPaths()'
+
+# RUN ls -lh /usr/local/lib/R
+
+# RUN ls -lh /usr/lib/R
+
+RUN echo "options(repos = c(CRAN = 'https://cran.rstudio.com/', INLA='https://inla.r-inla-download.org/R/$INLA_REPO'), \
+  download.file.method = 'libcurl')" >> /usr/lib/R/etc/Rprofile.site
+
+
+# RUN R -e "install.packages('INLA', repos=c(getOption('repos'), INLA='https://inla.r-inla-download.org/R/$INLA_REPO'), dep=TRUE)" 
+
+RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install \
+		'INLA' 'tidyverse' \
+    && rm -rf /tmp/downloaded_packages/ /tmp/*.rds 
+
 
 # Install FishStatsUtils from github
-RUN R -e "remotes::install_github('james-thorson/FishStatsUtils', INSTALL_opts='--no-staged-install')" 
+#RUN R -e "remotes::install_github('james-thorson/FishStatsUtils', INSTALL_opts='--no-staged-install')" 
+
+# RUN installGithub.r 'james-thorson/FishStatsUtils'  && rm -rf /tmp/downloaded_packages/ /tmp/*.rd
+
+RUN --mount=type=secret,id=dotenv,dst=/run/secrets/.env \
+    set -a && . /run/secrets/.env && set +a \
+  && installGithub.r 'james-thorson/FishStatsUtils' \
+  && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
 # Install VAST from github
-RUN R -e "remotes::install_github('james-thorson/VAST', INSTALL_opts='--no-staged-install')" 
+#RUN R -e "remotes::install_github('james-thorson/VAST', INSTALL_opts='--no-staged-install')" 
+
+# RUN installGithub.r 'james-thorson/VAST' && rm -rf /tmp/downloaded_packages/ /tmp/*.rd
+
+RUN --mount=type=secret,id=dotenv,dst=/run/secrets/.env set -a \
+  && . /run/secrets/.env && set +a \
+  && installGithub.r 'james-thorson/VAST' \
+  && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
+
+RUN --mount=type=secret,id=dotenv,dst=/run/secrets/.env \
+    set -a && . /run/secrets/.env && set +a \
+  && installGithub.r 'james-thorson/Utilities' \
+  && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
 ## 2020-08-12 taken from p16 of https://mzdgnk.gitlab.io/r-ml/Docker/rstudio.html#16
 # Change environment to Japanese(Character and DateTime)
@@ -88,7 +156,8 @@ RUN ln -sf  /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
 # Install ipaexfont
 RUN apt-get update && apt-get install -y \
   		 --no-install-recommends \
-			fonts-ipaexfont
+			fonts-ipaexfont fonts-noto-cjk \
+			&& apt-get clean && rm -rf /var/lib/apt/lists/*
 
 
 
@@ -100,12 +169,21 @@ RUN apt-get update && \
 
 RUN apt-get update && \
     apt-get -y upgrade --no-install-recommends &&  \
-    apt-get -y autoremove
+    apt-get -y autoremove \
+    && apt-get autoclean -y \
+  	&& apt-get  clean -y && rm -rf /var/lib/apt/lists/* \
+		&& rm -rf /tmp/downloaded_packages/ /tmp/*.rds 
 
 ENV USER vast
 ENV PASSWORD vastuser
 
-RUN adduser $USER --disabled-password --home /home/$USER --gecos ""  && gpasswd -a $USER sudo 
+#RUN adduser $USER --disabled-password --home /home/$USER --gecos ""  && gpasswd -a $USER sudo 
+
+RUN adduser $USER --disabled-password --home /home/$USER --gecos "" \
+    && echo "$USER:$USER" | chpasswd \
+    && addgroup $USER  staff
+
+CMD chown $USER /home/$USER
 
 USER $USER
 

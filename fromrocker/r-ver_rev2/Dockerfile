@@ -1,3 +1,4 @@
+# syntax = docker/dockerfile:1.0-experimental
 #
 # Base image is based on r-ver instead of r-base 
 #
@@ -12,6 +13,12 @@
 # 2020-09-23 Chnage to 4.0.2 again
 # 2020-10-15 Changed to r-ver:4.0.3 for base image 
 FROM rocker/r-ver:4.0.3
+
+####
+
+
+####
+
 
 ## In order to avoid interupt for timezone setting
 ENV DEBIAN_FRONTEND noninteractive 
@@ -47,9 +54,13 @@ RUN apt-get update && \
 	libgdal-dev \
   libglu1-mesa-dev \
   libfreetype-dev \
-        && apt-get autoremove -y && apt-get autoclean -y \
-        && apt-get clean && rm -rf /var/lib/apt/lists/*
-
+  libfontconfig1-dev \
+	tcl-dev \
+	tk-dev \
+  && apt-get autoremove -y && apt-get autoclean -y \
+  && apt-get clean && rm -rf /var/lib/apt/lists/* \
+	&& apt-get autoremove -y && apt-get autoclean -y \
+	&& apt-get clean && rm -rf /var/lib/apt/lists/*
 #        gcc g++ gfortran \
 #        libgdal-dev \
 #        libglu1-mesa-dev \
@@ -91,58 +102,35 @@ ENV R_INSTALL_STAGED  FALSE
 
 # RUN R -e "options(repos = c('https://cloud.r-project.org/'));install.packages(c('shiny'))"
 
-RUN install2.r  --error --ncpus -1 --skipinstalled -- --no-staged-install 'Rcpp'
-
-RUN install2.r  --error --ncpus -1 --skipinstalled -- --no-staged-install 'shiny'
-
-RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install 'rgl'
-
-
-######
-
-
-#RUN R -e "options(repos = c('https://cloud.r-project.org/'));install.packages(c('rnaturalearthdata','TMB','devtools','rgl','rgdal'))" 
-
-RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install 'rnaturalearthdata'
-
-RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install 'RcppEigen'
-
-RUN install2.r  --error --ncpus -1 --skipinstalled -- --no-staged-install 'TMB'
-
-RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install 'roxygen2'
-
-RUN install2.r  --error --ncpus -1 --skipinstalled -- --no-staged-install 'devtools' 
-
-
-RUN install2.r  --error --ncpus -1 --skipinstalled -- --no-staged-install 'rgdal' 
+RUN install2.r  --error --ncpus -1 --skipinstalled -- --no-staged-install \
+									'Rcpp' \
+										 'shiny' \
+										 'rgl' \ 
+										 'rnaturalearthdata' \
+										 'RcppEigen' \
+										 'rgdal' \
+										 'TMB' \
+											'roxygen2' \
+											'devtools' \
+											&& rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
 #RUN R -e "options(repos = c('https://cloud.r-project.org/'));install.packages('BiocManager')  ;   BiocManager::install('Rgraphviz', update=FALSE, ask=FALSE)"
 
-RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install 'BiocManager'
+RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install 'BiocManager' && rm -rf /tmp/*
 
 RUN R -e "BiocManager::install('Rgraphviz', update=FALSE, ask=FALSE)"
 
-RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install 'sf'
-
-RUN install2.r   --error --ncpus -1 --skipinstalled  -- --no-staged-install 'RcppArmadillo'
-
-RUN install2.r   --error --ncpus -1 --skipinstalled  -- --no-staged-install 'maps'
-
-RUN install2.r  'fields' --error --ncpus -1 --skipinstalled  -- --no-staged-install
-
-RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install 'spdep'
-
-RUN install2.r   --error --ncpus -1 --skipinstalled  -- --no-staged-install 'dplyr'
-
-RUN install2.r   --error --ncpus -1 --skipinstalled  -- --no-staged-install 'rgeos'
-
-RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install 'tinytex'
-
-RUN install2.r   --error --ncpus -1 --skipinstalled  -- --no-staged-install 'rmarkdown'
-
-RUN install2.r   --error --ncpus -1 --skipinstalled  -- --no-staged-install 'foreach'
-
-# RUN R -e "options(repos = c('https://cloud.r-project.org/')); install.packages('TMB')"
+RUN install2.r   --error --ncpus -1 --skipinstalled  -- --no-staged-install \
+				 'sf' \
+				 'RcppArmadillo' \
+				 'fields' \
+				 'spdep' \
+				 'dplyr' \
+				 'rgeos' \
+				 'tinytex' \
+				 'foreach' \
+				 'rmarkdown' \
+				 && rm -rf /tmp/downloaded_packages/ /tmp/*.rds 
 
 ## Install INLA 
 # Define the version/repo of INLA to use. Choose either: 'stable' or 'testing'
@@ -154,7 +142,8 @@ ARG INLA_REPO='testing'
 RUN echo "options(repos = c(CRAN = 'https://cran.rstudio.com/', INLA='https://inla.r-inla-download.org/R/$INLA_REPO'), \
   download.file.method = 'libcurl')" >> /usr/local/lib/R/etc/Rprofile.site
 
-RUN install2.r  --error --ncpus -1 --skipinstalled -- --no-staged-install 'INLA' 
+RUN install2.r  --error --ncpus -1 --skipinstalled -- --no-staged-install 'INLA' \
+		&& rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
 # Install FishStatsUtils from github
 #RUN R -e "remotes::install_github('james-thorson/FishStatsUtils', INSTALL_opts='--no-staged-install', auth_token = $GITHUBPASSWORD)" 
@@ -163,16 +152,11 @@ RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install \
                 statmod   \
                 nloptr   \    
                 minqa    \    
-                lme4     
-                
-
-RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install \
+                lme4  \
                 doParallel   \
                 plyr         \
                 zoo          \
-                intervals    
-
-RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install \
+                intervals  \
                 xts \
                 FNN          \
                 spacetime    \
@@ -187,16 +171,10 @@ RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install \
                 plotrix      \
                 scales       \
                 reshape      \
-                ps           
-
-RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install glmmTMB      
-                
-
-RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install \
+                ps       \
+                glmmTMB     \
                 qgam         \
-                sfsmisc      
-
-RUN install2.r     --error --ncpus -1 --skipinstalled -- --no-staged-install \
+                sfsmisc \
                   ape \
                   lmtest       \
                   gap   \       
@@ -211,9 +189,7 @@ RUN install2.r     --error --ncpus -1 --skipinstalled -- --no-staged-install \
                   RandomFieldsUtils \
                   DHARMa       \
                   splancs      \
-                  formatR      
-
-RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install \
+                  formatR  \
                 rnaturalearth \
                 pander       \
                 corpcor      \
@@ -225,21 +201,31 @@ RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install \
                 RandomFields \
                 RANN         \
                 maptools     \
-                mapproj      
+                mapproj      \
+								tidyverse \
+								&& rm -rf /tmp/downloaded_packages/ /tmp/*.rds 
                 
-
-RUN installGithub.r 'james-thorson/FishStatsUtils'
+RUN --mount=type=secret,id=dotenv,dst=/run/secrets/.env \
+		set -a && . /run/secrets/.env && set +a \ 
+	&& installGithub.r 'james-thorson/FishStatsUtils' \
+	&& rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
 # Install VAST from github
 #RUN R -e "remotes::install_github('james-thorson/VAST', INSTALL_opts='--no-staged-install' , auth_token = $GITHUBPASSWORD)" 
 
-RUN installGithub.r 'james-thorson/VAST'
+RUN --mount=type=secret,id=dotenv,dst=/run/secrets/.env set -a \
+	&& . /run/secrets/.env && set +a \
+	&& installGithub.r 'james-thorson/VAST' \
+  && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
 ## 2020-08-12 Add ThorsonUtilities as it is required from VAST
 ## It seems it is implicitely installed 
 #RUN R -e "remotes::install_github('james-thorson/Utilities', INSTALL_opts='--no-staged-install' , auth_token = $GITHUBPASSWORD)"
 
-RUN installGithub.r 'james-thorson/Utilities'
+RUN --mount=type=secret,id=dotenv,dst=/run/secrets/.env \
+  	set -a && . /run/secrets/.env && set +a \ 
+	&& installGithub.r 'james-thorson/Utilities' \
+	&& rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
 ## 2020-08-12
 # Change environment to Japanese(Character and DateTime)
@@ -255,23 +241,37 @@ RUN ln -sf  /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
 # Install ipaexfont
 # 2020-10-14 Add fonts-noto-cjk based on 
 # https://k-metrics.github.io/cabinet/env_install_svr.html
-RUN apt-get update && apt-get install -y \
-  fonts-ipaexfont fonts-noto-cjk
+RUN apt-get update && \
+	apt-get -y upgrade --no-install-recommends   \
+	&& apt-get install -y --no-install-recommends \
+  fonts-ipaexfont fonts-noto-cjk \
+  && apt-get autoremove -y && apt-get autoclean -y \
+  && apt-get clean && rm -rf /var/lib/apt/lists/* \
+  && rm -rf /tmp/*
 
 ## 2020-06-21 install missing sudo command
 
-RUN apt-get update && \
-    apt-get -y install --no-install-recommends \
-        sudo
+#RUN apt-get update && \
+#    apt-get -y install --no-install-recommends \
+#        sudo \
+#    && apt-get autoremove -y && apt-get autoclean -y \
+#  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && \
-    apt-get -y upgrade --no-install-recommends &&  \
-    apt-get -y autoremove
+# RUN apt-get update && \
+#    apt-get -y upgrade --no-install-recommends   \
+#    && apt-get autoremove -y && apt-get autoclean -y \
+#    && apt-get clean && rm -rf /var/lib/apt/lists/* \
+#		&& rm -rf /tmp/*
 
 ENV USER vast
 ENV PASSWORD vastuser
 
-RUN adduser $USER --disabled-password --home /home/$USER --gecos ""  && echo "$USER:$USER" | chpasswd && gpasswd -a $USER sudo
+# RUN adduser $USER --disabled-password --home /home/$USER --gecos ""  && echo "$USER:$USER" | chpasswd && gpasswd -a $USER sudo
+
+RUN adduser $USER --disabled-password --home /home/$USER --gecos "" \
+		&& echo "$USER:$USER" | chpasswd \
+		&& addgroup $USER  staff
+
 
 USER $USER
 
