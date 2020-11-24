@@ -57,8 +57,9 @@ RUN apt-get update && \
   libfontconfig1-dev \
 	tcl-dev \
 	tk-dev \
-  && apt-get autoremove -y && apt-get autoclean -y \
-  && apt-get clean && rm -rf /var/lib/apt/lists/* \
+	wget \
+  fonts-ipaexfont \
+	fonts-noto-cjk \
 	&& apt-get autoremove -y && apt-get autoclean -y \
 	&& apt-get clean && rm -rf /var/lib/apt/lists/*
 #        gcc g++ gfortran \
@@ -76,16 +77,24 @@ RUN apt-get update && \
 #	&& apt-get autoremove -y && apt-get autoclean -y \
 #	&& apt-get clean && rm -rf /var/lib/apt/lists/* 
 
-#RUN apt-get update && \
-#    apt-get -y upgrade --no-install-recommends &&  \
-#    apt-get -y autoremove && 
+
+## 2020-08-12
+# Change environment to Japanese(Character and DateTime)
+ENV LANG ja_JP.UTF-8
+ENV LC_ALL ja_JP.UTF-8
+RUN sed -i '$d' /etc/locale.gen \
+  && echo "ja_JP.UTF-8 UTF-8" >> /etc/locale.gen \
+    && locale-gen ja_JP.UTF-8 \
+    && /usr/sbin/update-locale LANG=ja_JP.UTF-8 LANGUAGE="ja_JP:ja"
+RUN /bin/bash -c "source /etc/default/locale"
+RUN ln -sf  /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
 
 
 ## Avoid error related to rgl package on headless see https://github.com/r-lib/remotes/issues/332
 ENV RGL_USE_NULL  "TRUE"
 
 RUN echo "options(repos = c(CRAN = 'https://cran.rstudio.com/'), \
-  download.file.method = 'libcurl')" >> /usr/local/lib/R/etc/Rprofile.site
+  download.file.method = 'wget')" >> /usr/local/lib/R/etc/Rprofile.site
 
 RUN R -e "options(repos = c('https://cran.rstudio.com/')); \
     update.packages(ask=FALSE)"
@@ -97,8 +106,6 @@ RUN R -e "options(repos = c('https://cran.rstudio.com/')); \
 
 # Sys.setenv(R_INSTALL_STAGED = FALSE)
 ENV R_INSTALL_STAGED  FALSE
-
-
 
 # RUN R -e "options(repos = c('https://cloud.r-project.org/'));install.packages(c('shiny'))"
 
@@ -130,25 +137,6 @@ RUN install2.r   --error --ncpus -1 --skipinstalled  -- --no-staged-install \
 				 'tinytex' \
 				 'foreach' \
 				 'rmarkdown' \
-				 && rm -rf /tmp/downloaded_packages/ /tmp/*.rds 
-
-## Install INLA 
-# Define the version/repo of INLA to use. Choose either: 'stable' or 'testing'
-# Note 2020-10-15 As of now no stable version of INLA available. So use testing version instead
-ARG INLA_REPO='testing'
-
-#RUN R -e "install.packages('INLA', repos=c(getOption('repos'), INLA='https://inla.r-inla-download.org/R/$INLA_REPO') ,   dep=TRUE)" 
-
-RUN echo "options(repos = c(CRAN = 'https://cran.rstudio.com/', INLA='https://inla.r-inla-download.org/R/$INLA_REPO'), \
-  download.file.method = 'libcurl')" >> /usr/local/lib/R/etc/Rprofile.site
-
-RUN install2.r  --error --ncpus -1 --skipinstalled -- --no-staged-install 'INLA' \
-		&& rm -rf /tmp/downloaded_packages/ /tmp/*.rds
-
-# Install FishStatsUtils from github
-#RUN R -e "remotes::install_github('james-thorson/FishStatsUtils', INSTALL_opts='--no-staged-install', auth_token = $GITHUBPASSWORD)" 
-
-RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install \
                 statmod   \
                 nloptr   \    
                 minqa    \    
@@ -204,7 +192,20 @@ RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install \
                 mapproj      \
 								tidyverse \
 								&& rm -rf /tmp/downloaded_packages/ /tmp/*.rds 
-                
+ 
+## Install INLA
+# Define the version/repo of INLA to use. Choose either: 'stable' or 'testing'
+# Note 2020-10-15 As of now no stable version of INLA available. So use testing version instead
+ARG INLA_REPO='testing'
+
+RUN echo "options(repos = c(CRAN = 'https://cran.rstudio.com/', INLA='https://inla.r-inla-download.org/R/$INLA_REPO'), \
+  download.file.method = 'wget')" >> /usr/local/lib/R/etc/Rprofile.site
+
+
+        
+RUN install2.r  --error --ncpus -1 --skipinstalled -- --no-staged-install 'INLA' \
+    && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
+ 
 RUN --mount=type=secret,id=dotenv,dst=/run/secrets/.env \
 		set -a && . /run/secrets/.env && set +a \ 
 	&& installGithub.r 'james-thorson/FishStatsUtils' \
@@ -227,27 +228,6 @@ RUN --mount=type=secret,id=dotenv,dst=/run/secrets/.env \
 	&& installGithub.r 'james-thorson/Utilities' \
 	&& rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
-## 2020-08-12
-# Change environment to Japanese(Character and DateTime)
-ENV LANG ja_JP.UTF-8
-ENV LC_ALL ja_JP.UTF-8
-RUN sed -i '$d' /etc/locale.gen \
-  && echo "ja_JP.UTF-8 UTF-8" >> /etc/locale.gen \
-    && locale-gen ja_JP.UTF-8 \
-    && /usr/sbin/update-locale LANG=ja_JP.UTF-8 LANGUAGE="ja_JP:ja"
-RUN /bin/bash -c "source /etc/default/locale"
-RUN ln -sf  /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
-
-# Install ipaexfont
-# 2020-10-14 Add fonts-noto-cjk based on 
-# https://k-metrics.github.io/cabinet/env_install_svr.html
-RUN apt-get update && \
-	apt-get -y upgrade --no-install-recommends   \
-	&& apt-get install -y --no-install-recommends \
-  fonts-ipaexfont fonts-noto-cjk \
-  && apt-get autoremove -y && apt-get autoclean -y \
-  && apt-get clean && rm -rf /var/lib/apt/lists/* \
-  && rm -rf /tmp/*
 
 ## 2020-06-21 install missing sudo command
 

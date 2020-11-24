@@ -29,8 +29,8 @@ else
   DATETIME="$(date -d now +%Y%m%d%H%M)"
 fi
 echo "DATETIME is $DATETIME" 2>&1  | tee -a ${LOGFILE}.log
-docker tag $NM:latest $NM:${DATETIME}_rev2 2>&1  | tee -a ${LOGFILE}.log
-docker tag $NM:latest $NM:${DATE}_rev2 2>&1  | tee -a ${LOGFILE}.log
+docker tag $NM:latest $NM:${DATETIME} 2>&1  | tee -a ${LOGFILE}.log
+docker tag $NM:latest $NM:${DATE} 2>&1  | tee -a ${LOGFILE}.log
 if [ -f ${LOGFILE}.log  ]; then
   cp -p ${LOGFILE}.log  ~/Dropbox/vast/log/${LOGFILE}_$DATETIME.log
 fi 
