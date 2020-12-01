@@ -45,7 +45,6 @@ RUN apt-get update && apt-get  -y --no-install-recommends install gpg   ca-certi
  	&& ln -s /usr/lib/R/site-library/littler/examples/install2.r /usr/local/bin/install2.r \
  	&& ln -s /usr/lib/R/site-library/littler/examples/installGithub.r /usr/local/bin/installGithub.r \
  	&& ln -s /usr/lib/R/site-library/littler/examples/testInstalled.r /usr/local/bin/testInstalled.r \
- 	&& install.r docopt \
  	&& rm -rf /tmp/downloaded_packages/ /tmp/*.rds \
   && apt-get autoremove -y  \
 	&& apt-get autoclean -y \
@@ -57,8 +56,20 @@ ENV RGL_USE_NULL  "TRUE"
 # Sys.setenv(R_INSTALL_STAGED = FALSE)
 ENV R_INSTALL_STAGED  FALSE
 
-RUN R -e "options(repos = c('https://cloud.r-project.org/')); \
-    update.packages(ask=FALSE)"
+# Define the version/repo of INLA to use. Choose either: 'stable' or 'testing'
+ARG INLA_REPO='testing'
+
+RUN echo "options(repos = c(CRAN = 'https://cran.rstudio.com/', INLA='https://inla.r-inla-download.org/R/$INLA_REPO'), \
+  download.file.method = 'wget')" >> /usr/lib/R/etc/Rprofile.site
+
+#RUN R -e "options(repos = c('https://cloud.r-project.org/')); \
+#    update.packages(ask=FALSE)"
+
+RUN R -e "update.packages(ask=FALSE)" \
+		&& rm -rf /tmp/downloaded_packages/ /tmp/*.rd
+
+RUN install.r 'docopt' \
+		&& rm -rf /tmp/downloaded_packages/ /tmp/*.rd
 
 #RUN Rscript -e "options(repos = c('https://cloud.r-project.org/')); \
 #    update.packages(ask=FALSE); \
@@ -70,31 +81,28 @@ RUN R -e "options(repos = c('https://cloud.r-project.org/')); \
 RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install \
     'rnaturalearthdata' \
 		'TMB' \
-    && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
-
-# RUN R -e "options(repos = c('https://cloud.r-project.org/'));install.packages(c('shiny','littler','systemfonts'))"
-
-RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install \
     'shiny' \
     'systemfonts' \
     'devtools' \
 		'remotes' \
+		'tidyverse' \
+		'BiocManager' \
+		&& R -e "BiocManager::install('Rgraphviz', update=FALSE, ask=FALSE)" \
     && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
-
 
 #RUN R -e "options(repos = c('https://cloud.r-project.org/'));install.packages('BiocManager') ; \
 #	BiocManager::install('Rgraphviz', update=FALSE, ask=FALSE)"
 
-RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install \
-    'BiocManager' \
-		&& R -e "BiocManager::install('Rgraphviz', update=FALSE, ask=FALSE)" \
-		&& rm -rf /tmp/downloaded_packages/ /tmp/*.rd	
+# RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install \
+#    'BiocManager' \
+#		&& R -e "BiocManager::install('Rgraphviz', update=FALSE, ask=FALSE)" \
+#		&& rm -rf /tmp/downloaded_packages/ /tmp/*.rd	
 
 # RUN Rscript -e "options(repos = c('https://cloud.r-project.org/')); install.packages('TMB')"
 
 ## Install INLA 
 # Define the version/repo of INLA to use. Choose either: 'stable' or 'testing'
-ARG INLA_REPO='testing'
+#ARG INLA_REPO='testing'
 
 # RUN Rscript -e '.libPaths()'
 
@@ -102,16 +110,15 @@ ARG INLA_REPO='testing'
 
 # RUN ls -lh /usr/lib/R
 
-RUN echo "options(repos = c(CRAN = 'https://cran.rstudio.com/', INLA='https://inla.r-inla-download.org/R/$INLA_REPO'), \
-  download.file.method = 'libcurl')" >> /usr/lib/R/etc/Rprofile.site
+#RUN echo "options(repos = c(CRAN = 'https://cran.rstudio.com/', INLA='https://inla.r-inla-download.org/R/$INLA_REPO'), \
+#  download.file.method = 'wget')" >> /usr/lib/R/etc/Rprofile.site
 
 
 # RUN R -e "install.packages('INLA', repos=c(getOption('repos'), INLA='https://inla.r-inla-download.org/R/$INLA_REPO'), dep=TRUE)" 
 
 RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install \
-		'INLA' 'tidyverse' \
+		'INLA'  \
     && rm -rf /tmp/downloaded_packages/ /tmp/*.rds 
-
 
 # Install FishStatsUtils from github
 #RUN R -e "remotes::install_github('james-thorson/FishStatsUtils', INSTALL_opts='--no-staged-install')" 
@@ -120,7 +127,9 @@ RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install \
 
 RUN --mount=type=secret,id=dotenv,dst=/run/secrets/.env \
     set -a && . /run/secrets/.env && set +a \
-  && installGithub.r 'james-thorson/FishStatsUtils' \
+  && installGithub.r \
+		'james-thorson/FishStatsUtils' \
+  	'james-thorson/Utilities' \
   && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
 # Install VAST from github
@@ -130,13 +139,13 @@ RUN --mount=type=secret,id=dotenv,dst=/run/secrets/.env \
 
 RUN --mount=type=secret,id=dotenv,dst=/run/secrets/.env set -a \
   && . /run/secrets/.env && set +a \
-  && installGithub.r 'james-thorson/VAST' \
+  && installGithub.r 'james-thorson/VAST'   \
   && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
-RUN --mount=type=secret,id=dotenv,dst=/run/secrets/.env \
-    set -a && . /run/secrets/.env && set +a \
-  && installGithub.r 'james-thorson/Utilities' \
-  && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
+#RUN --mount=type=secret,id=dotenv,dst=/run/secrets/.env \
+#    set -a && . /run/secrets/.env && set +a \
+#  && installGithub.r 'james-thorson/Utilities' \
+#  && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
 ## 2020-08-12 taken from p16 of https://mzdgnk.gitlab.io/r-ml/Docker/rstudio.html#16
 # Change environment to Japanese(Character and DateTime)
@@ -145,34 +154,19 @@ ENV LC_ALL ja_JP.UTF-8
 ### Needed to avoid error missing locale.gen https://qiita.com/kikako/items/5961628476abf61ee371
 RUN apt-get update && \
 	apt-get -y install  --no-install-recommends \
-		language-pack-ja-base language-pack-ja 
+		language-pack-ja-base language-pack-ja \
+    fonts-ipaexfont fonts-noto-cjk \
+    && apt-get -y autoremove \
+    && apt-get autoclean -y \
+    && apt-get  clean -y && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
+
 RUN sed -i '$d' /etc/locale.gen \
   && echo "ja_JP.UTF-8 UTF-8" >> /etc/locale.gen \
     && locale-gen ja_JP.UTF-8 \
-    && /usr/sbin/update-locale LANG=ja_JP.UTF-8 LANGUAGE="ja_JP:ja"
-RUN /bin/bash -c "source /etc/default/locale"
-RUN ln -sf  /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
-
-# Install ipaexfont
-RUN apt-get update && apt-get install -y \
-  		 --no-install-recommends \
-			fonts-ipaexfont fonts-noto-cjk \
-			&& apt-get clean && rm -rf /var/lib/apt/lists/*
-
-
-
-## 2020-08-12 install missing sudo command
-
-RUN apt-get update && \
-    apt-get -y install --no-install-recommends \
-        sudo
-
-RUN apt-get update && \
-    apt-get -y upgrade --no-install-recommends &&  \
-    apt-get -y autoremove \
-    && apt-get autoclean -y \
-  	&& apt-get  clean -y && rm -rf /var/lib/apt/lists/* \
-		&& rm -rf /tmp/downloaded_packages/ /tmp/*.rds 
+    && /usr/sbin/update-locale LANG=ja_JP.UTF-8 LANGUAGE="ja_JP:ja" \
+		&& /bin/bash -c "source /etc/default/locale" \
+		&& ln -sf  /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
 
 ENV USER vast
 ENV PASSWORD vastuser

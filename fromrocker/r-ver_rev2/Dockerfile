@@ -93,7 +93,15 @@ RUN ln -sf  /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
 ## Avoid error related to rgl package on headless see https://github.com/r-lib/remotes/issues/332
 ENV RGL_USE_NULL  "TRUE"
 
-RUN echo "options(repos = c(CRAN = 'https://cran.rstudio.com/'), \
+#RUN echo "options(repos = c(CRAN = 'https://cran.rstudio.com/'), \
+#  download.file.method = 'wget')" >> /usr/local/lib/R/etc/Rprofile.site
+
+## Install INLA
+# Define the version/repo of INLA to use. Choose either: 'stable' or 'testing'
+# Note 2020-10-15 As of now no stable version of INLA available. So use testing version instead
+ARG INLA_REPO='testing'
+
+RUN echo "options(repos = c(CRAN = 'https://cran.rstudio.com/', INLA='https://inla.r-inla-download.org/R/$INLA_REPO'), \
   download.file.method = 'wget')" >> /usr/local/lib/R/etc/Rprofile.site
 
 RUN R -e "options(repos = c('https://cran.rstudio.com/')); \
@@ -196,10 +204,10 @@ RUN install2.r   --error --ncpus -1 --skipinstalled  -- --no-staged-install \
 ## Install INLA
 # Define the version/repo of INLA to use. Choose either: 'stable' or 'testing'
 # Note 2020-10-15 As of now no stable version of INLA available. So use testing version instead
-ARG INLA_REPO='testing'
+#ARG INLA_REPO='testing'
 
-RUN echo "options(repos = c(CRAN = 'https://cran.rstudio.com/', INLA='https://inla.r-inla-download.org/R/$INLA_REPO'), \
-  download.file.method = 'wget')" >> /usr/local/lib/R/etc/Rprofile.site
+#RUN echo "options(repos = c(CRAN = 'https://cran.rstudio.com/', INLA='https://inla.r-inla-download.org/R/$INLA_REPO'), \
+#  download.file.method = 'wget')" >> /usr/local/lib/R/etc/Rprofile.site
 
 
         
@@ -209,6 +217,7 @@ RUN install2.r  --error --ncpus -1 --skipinstalled -- --no-staged-install 'INLA'
 RUN --mount=type=secret,id=dotenv,dst=/run/secrets/.env \
 		set -a && . /run/secrets/.env && set +a \ 
 	&& installGithub.r 'james-thorson/FishStatsUtils' \
+   'james-thorson/Utilities'
 	&& rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
 # Install VAST from github
@@ -223,10 +232,10 @@ RUN --mount=type=secret,id=dotenv,dst=/run/secrets/.env set -a \
 ## It seems it is implicitely installed 
 #RUN R -e "remotes::install_github('james-thorson/Utilities', INSTALL_opts='--no-staged-install' , auth_token = $GITHUBPASSWORD)"
 
-RUN --mount=type=secret,id=dotenv,dst=/run/secrets/.env \
-  	set -a && . /run/secrets/.env && set +a \ 
-	&& installGithub.r 'james-thorson/Utilities' \
-	&& rm -rf /tmp/downloaded_packages/ /tmp/*.rds
+#RUN --mount=type=secret,id=dotenv,dst=/run/secrets/.env \
+#  	set -a && . /run/secrets/.env && set +a \ 
+#	&& installGithub.r 'james-thorson/Utilities' \
+#	&& rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
 
 ## 2020-06-21 install missing sudo command
