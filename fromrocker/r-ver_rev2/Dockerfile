@@ -23,8 +23,8 @@ FROM rocker/r-ver:4.0.3
 ## In order to avoid interupt for timezone setting
 ENV DEBIAN_FRONTEND noninteractive 
 
-ARG GITHUBUSERNAME=github_username 
-ARG GITHUBPASSWORD=$github_password
+#ARG GITHUBUSERNAME=github_username 
+#ARG GITHUBPASSWORD=$github_password
 
 ## This command is taken from https://raw.githubusercontent.com/egonzalf/rstudio-inla/master/Dockerfile 
 ## Then modified to add additional packages for instlation of rgl
@@ -217,7 +217,7 @@ RUN install2.r  --error --ncpus -1 --skipinstalled -- --no-staged-install 'INLA'
 RUN --mount=type=secret,id=dotenv,dst=/run/secrets/.env \
 		set -a && . /run/secrets/.env && set +a \ 
 	&& installGithub.r 'james-thorson/FishStatsUtils' \
-   'james-thorson/Utilities'
+   'james-thorson/Utilities' \
 	&& rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
 # Install VAST from github
