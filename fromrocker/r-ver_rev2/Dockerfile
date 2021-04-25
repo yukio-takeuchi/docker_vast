@@ -11,8 +11,9 @@
 # 2020-08-14 adapt date command for MacOS
 # 2020-08-23 Change the base image back yo rocker/r-ver:4.0.0
 # 2020-09-23 Chnage to 4.0.2 again
-# 2020-10-15 Changed to r-ver:4.0.3 for base image 
-FROM rocker/r-ver:4.0.4
+# 2020-10-15 Changed to r-ver:4.0.3 for base image
+# 2021-04-10 Changed to r-ver:4.0.4 for base image
+FROM rocker/r-ver:4.0.5
 
 ####
 
