@@ -17,6 +17,9 @@ FROM rocker/r-ver:4.0.5
 
 ####
 
+ARG ncpu=4 
+
+RUN echo "use ${ncpu} for building this image"
 
 ####
 
@@ -118,7 +121,7 @@ ENV R_INSTALL_STAGED  FALSE
 
 # RUN R -e "options(repos = c('https://cloud.r-project.org/'));install.packages(c('shiny'))"
 
-RUN install2.r  --error --ncpus -1 --skipinstalled -- --no-staged-install \
+RUN install2.r  --error --ncpus ${ncpu} --skipinstalled -- --no-staged-install \
 									'Rcpp' \
 										 'shiny' \
 										 'rgl' \ 
@@ -132,11 +135,11 @@ RUN install2.r  --error --ncpus -1 --skipinstalled -- --no-staged-install \
 
 #RUN R -e "options(repos = c('https://cloud.r-project.org/'));install.packages('BiocManager')  ;   BiocManager::install('Rgraphviz', update=FALSE, ask=FALSE)"
 
-RUN install2.r   --error --ncpus -1 --skipinstalled -- --no-staged-install 'BiocManager' && rm -rf /tmp/*
+RUN install2.r   --error --ncpus ${ncpu} --skipinstalled -- --no-staged-install 'BiocManager' && rm -rf /tmp/*
 
 RUN R -e "BiocManager::install('Rgraphviz', update=FALSE, ask=FALSE)"
 
-RUN install2.r   --error --ncpus -1 --skipinstalled  -- --no-staged-install \
+RUN install2.r   --error --ncpus ${ncpu} --skipinstalled  -- --no-staged-install \
 				 'sf' \
 				 'RcppArmadillo' \
 				 'fields' \
@@ -212,7 +215,7 @@ RUN install2.r   --error --ncpus -1 --skipinstalled  -- --no-staged-install \
 
 
         
-RUN install2.r  --error --ncpus -1 --skipinstalled -- --no-staged-install 'INLA' \
+RUN install2.r  --error --ncpus ${ncpu} --skipinstalled -- --no-staged-install 'INLA' \
     && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
  
 RUN --mount=type=secret,id=dotenv,dst=/run/secrets/.env \
